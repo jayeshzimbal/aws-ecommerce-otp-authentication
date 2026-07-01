@@ -1,6 +1,7 @@
-flask
-flask_cors
-pymysql
+Flask
+flask-cors
+PyMySQL
 mysql-connector-python
-werkzeug
-flask-mail
+Werkzeug
+Flask-Mail
+gunicorn
