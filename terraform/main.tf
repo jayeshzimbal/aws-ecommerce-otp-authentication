@@ -95,9 +95,9 @@ module "eks" {
 
   eks_managed_node_groups = {
     workers = {
-      min_size     = 1
-      max_size     = 3
-      desired_size = 2
+      min_size     = 2
+      max_size     = 2
+      desired_size = 3
     }
   }
 
