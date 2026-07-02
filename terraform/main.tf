@@ -70,7 +70,16 @@ module "eks" {
 
   cluster_endpoint_public_access = true
 
+    vpc_id = module.vpc.vpc_id
+
   subnet_ids = module.vpc.private_subnets
+
+  control_plane_subnet_ids = module.vpc.private_subnets
+
+  depends_on = [
+    module.vpc
+  ]
+
 
   enable_cluster_creator_admin_permissions = true
 
