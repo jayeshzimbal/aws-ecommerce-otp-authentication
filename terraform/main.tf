@@ -22,26 +22,15 @@ module "vpc" {
   version = "~> 5.0"
 
   name = "ecommerce-vpc"
-
   cidr = "10.0.0.0/16"
 
-  azs = [
-    "ap-south-1a",
-    "ap-south-1b"
-  ]
+  azs = ["ap-south-1a", "ap-south-1b"]
 
-  public_subnets = [
-    "10.0.1.0/24",
-    "10.0.2.0/24"
-  ]
-
-  private_subnets = [
-    "10.0.11.0/24",
-    "10.0.12.0/24"
-  ]
+  public_subnets  = ["10.0.1.0/24", "10.0.2.0/24"]
+  private_subnets = ["10.0.11.0/24", "10.0.12.0/24"]
 
   enable_nat_gateway = true
-  single_nat_gateway = true
+  single_nat_gateway  = true
 
   public_subnet_tags = {
     "kubernetes.io/role/elb" = "1"
@@ -52,8 +41,80 @@ module "vpc" {
   }
 
   tags = {
-    Project                               = "ecommerce"
+    Project                                = "ecommerce"
     "kubernetes.io/cluster/ecommerce-cluster" = "shared"
+  }
+}
+
+#################################################
+# SECURITY GROUP FOR RDS
+#################################################
+
+resource "aws_security_group" "rds_sg" {
+  name        = "rds-sg"
+  description = "Allow MySQL access from EKS"
+  vpc_id      = module.vpc.vpc_id
+
+  ingress {
+    from_port   = 3306
+    to_port     = 3306
+    protocol    = "tcp"
+    cidr_blocks = ["10.0.0.0/16"]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  tags = {
+    Name = "rds-sg"
+  }
+}
+
+#################################################
+# RDS SUBNET GROUP
+#################################################
+
+resource "aws_db_subnet_group" "rds_subnet" {
+  name       = "ecommerce-db-subnet"
+  subnet_ids = module.vpc.private_subnets
+
+  tags = {
+    Name = "ecommerce-db-subnet"
+  }
+}
+
+#################################################
+# RDS MYSQL DATABASE
+#################################################
+
+resource "aws_db_instance" "mysql" {
+  identifier = "ecommerce-db"
+
+  engine         = "mysql"
+  engine_version = "8.0"
+
+  instance_class = "db.t3.micro"
+
+  allocated_storage = 20
+
+  db_name  = "cloud"
+  username = "admin"
+  password = "Cloud12345!"
+
+  db_subnet_group_name   = aws_db_subnet_group.rds_subnet.name
+  vpc_security_group_ids = [aws_security_group.rds_sg.id]
+
+  skip_final_snapshot = true
+  publicly_accessible = false
+
+  multi_az = false
+
+  tags = {
+    Project = "ecommerce"
   }
 }
 
@@ -70,16 +131,10 @@ module "eks" {
 
   cluster_endpoint_public_access = true
 
-    vpc_id = module.vpc.vpc_id
-
+  vpc_id     = module.vpc.vpc_id
   subnet_ids = module.vpc.private_subnets
 
   control_plane_subnet_ids = module.vpc.private_subnets
-
-  depends_on = [
-    module.vpc
-  ]
-
 
   enable_cluster_creator_admin_permissions = true
 
@@ -87,10 +142,7 @@ module "eks" {
 
   eks_managed_node_group_defaults = {
     ami_type = "AL2_x86_64"
-
-    instance_types = [
-      "t3.micro"
-    ]
+    instance_types = ["t3.micro"]
   }
 
   eks_managed_node_groups = {
@@ -120,4 +172,8 @@ output "cluster_endpoint" {
 
 output "vpc_id" {
   value = module.vpc.vpc_id
+}
+
+output "rds_endpoint" {
+  value = aws_db_instance.mysql.endpoint
 }

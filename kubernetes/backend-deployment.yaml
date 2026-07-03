@@ -1,38 +1,43 @@
 apiVersion: apps/v1
 kind: Deployment
-
 metadata:
   name: backend
   namespace: ecommerce
-
 spec:
-  replicas: 2
-
+  replicas: 1
   selector:
     matchLabels:
       app: backend
-
   template:
     metadata:
       labels:
         app: backend
-
     spec:
       containers:
       - name: backend
-
-        image: YOUR_DOCKERHUB_USERNAME/google-backend:latest
-
+        image: 125499242323.dkr.ecr.ap-south-1.amazonaws.com/ecommerce-backend:latest
         imagePullPolicy: Always
 
         ports:
         - containerPort: 5000
 
+        env:
+        - name: DB_HOST
+          value: "cloud-db.chuwkacgy778.ap-south-1.rds.amazonaws.com"
+
+        - name: DB_USER
+          value: "admin"
+
+        - name: DB_PASSWORD
+          value: "Cloud12345!"
+
+        - name: DB_NAME
+          value: "cloud"
+
         resources:
           requests:
             cpu: "100m"
             memory: "128Mi"
-
           limits:
             cpu: "500m"
             memory: "512Mi"
