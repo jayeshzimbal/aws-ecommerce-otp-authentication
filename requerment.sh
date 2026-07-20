@@ -5,9 +5,14 @@ set -e
 echo 'Updating system...'
 sudo dnf update -y || sudo yum update -y
 
-echo 'Installing basic tools...'
-sudo dnf install -y git curl wget unzip zip jq tree vim nano tar gzip which || \
-sudo yum install -y git curl wget unzip zip jq tree vim nano tar gzip which
+echo "Installing Git..."
+sudo yum install -y git
+
+echo "Cloning repository..."
+git clone https://github.com/jayeshzimbal/aws-ecommerce-otp-authentication.git
+
+echo "Installing Tree..."
+sudo yum install -y tree
 
 echo 'Installing Docker...'
 sudo dnf install -y docker || sudo yum install -y docker
